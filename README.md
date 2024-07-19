@@ -51,11 +51,6 @@ Ensure your directory contains the following files:
 - `index.html`: HTML file for the chatbot interface.
 - `Sample Question Answers.json`: JSON file with question-answer pairs.
 
-## Example
-
-1. **Input**: "How can I contact customer support?"
-2. **Response**: "Please contact our business directly for more information."
-
 ## Contributing
 
 Feel free to fork this repository and make improvements or report issues.
