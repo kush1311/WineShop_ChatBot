@@ -3,101 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>Wine Shop Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            padding: 20px;
         }
-        #chat-container {
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            width: 400px;
-            max-width: 90%;
-            display: flex;
-            flex-direction: column;
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #8b0000 0%, #a52a2a 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            position: relative;
             overflow: hidden;
         }
-        #chat-box {
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .chat-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .wine-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .chat-messages {
             height: 400px;
             overflow-y: auto;
             padding: 20px;
-            border-bottom: 1px solid #ddd;
-            background-color: #fafafa;
+            background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
         }
-        #chat-box p {
-            margin: 0;
-            padding: 5px 10px;
-            border-radius: 5px;
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
         }
-        #chat-box p:nth-child(odd) {
-            background-color: #e9e9eb;
-            text-align: left;
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
         }
-        #chat-box p:nth-child(even) {
-            background-color: #007bff;
-            color: #fff;
-            text-align: right;
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
         }
-        #input-container {
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
             display: flex;
-            border-top: 1px solid #ddd;
+            align-items: flex-start;
+            gap: 12px;
         }
-        #user-input {
-            width: calc(100% - 70px);
-            padding: 15px;
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.bot .message-content {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
+            color: white;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.2);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
+        }
+
+        .bot-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(139, 0, 0, 0.1);
+        }
+
+        .welcome-message h3 {
+            color: #8b0000;
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 8px;
+        }
+
+        .welcome-message p {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #8b0000;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.1);
+        }
+
+        .user-input {
+            flex: 1;
             border: none;
-            box-sizing: border-box;
-        }
-        #user-input:focus {
+            background: transparent;
+            padding: 12px 16px;
+            font-size: 16px;
             outline: none;
+            color: #2c3e50;
         }
-        button {
-            width: 70px;
-            padding: 15px;
-            background: #007bff;
-            color: #fff;
+
+        .user-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #8b0000 0%, #a52a2a 100%);
+            color: white;
             border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
         }
-        button:hover {
-            background: #0056b3;
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button i {
+            font-size: 16px;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 16px 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .typing-indicator.show {
+            display: block;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .suggestion-chip {
+            background: rgba(139, 0, 0, 0.1);
+            color: #8b0000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(139, 0, 0, 0.2);
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(139, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                margin: 10px;
+                border-radius: 16px;
+            }
+            
+            .chat-header {
+                padding: 20px;
+            }
+            
+            .chat-header h1 {
+                font-size: 24px;
+            }
+            
+            .chat-messages {
+                height: 350px;
+            }
+            
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-box">
-            <p><strong>Welcome to our Wine Business Chatbot!</strong></p>
-            <p>How can we help you today? Ask us anything about our wines, services, or any other queries you might have.</p>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="wine-icon">
+                <i class="fas fa-wine-glass-alt"></i>
+            </div>
+            <h1>Wine Shop Assistant</h1>
+            <p>Your personal sommelier for all things wine</p>
         </div>
-        <div id="input-container">
-            <input type="text" id="user-input" placeholder="Ask me a question...">
-            <button onclick="sendMessage()">Send</button>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="welcome-message fade-in">
+                <h3>🍷 Welcome to our Wine Shop!</h3>
+                <p>I'm here to help you discover the perfect wine, learn about our collection, and answer any questions you might have about our services.</p>
+            </div>
+            
+            <div class="suggestions">
+                <div class="suggestion-chip" onclick="sendSuggestion('What wines do you recommend for beginners?')">
+                    Beginner wines
+                </div>
+                <div class="suggestion-chip" onclick="sendSuggestion('Tell me about your wine collection')">
+                    Wine collection
+                </div>
+                <div class="suggestion-chip" onclick="sendSuggestion('What are your business hours?')">
+                    Business hours
+                </div>
+                <div class="suggestion-chip" onclick="sendSuggestion('Do you offer wine tastings?')">
+                    Wine tastings
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typing-indicator">
+            <i class="fas fa-circle-notch fa-spin"></i> Sommelier is thinking...
+        </div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" class="user-input" id="user-input" placeholder="Ask me about wines, services, or anything else..." onkeypress="handleKeyPress(event)">
+                <button class="send-button" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
     </div>
+
     <script>
-        async function sendMessage() {
-            const input = document.getElementById('user-input').value;
-            if (input.trim() === '') return;
-            document.getElementById('user-input').value = '';
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: input })
-            });
-            const data = await response.json();
-            document.getElementById('chat-box').innerHTML += `<p><strong>You:</strong> ${input}</p><p><strong>Bot:</strong> ${data.answer}</p>`;
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        let messageCount = 0;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         }
+
+        function sendSuggestion(text) {
+            document.getElementById('user-input').value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            
+            if (message === '') return;
+            
+            // Clear input
+            input.value = '';
+            
+            // Add user message
+            addMessage(message, 'user');
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Add bot response
+                addMessage(data.answer, 'bot');
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+            }
+        }
+
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="bot-avatar">
+                        <i class="fas fa-wine-glass-alt"></i>
+                    </div>
+                    <div class="message-content">
+                        ${content}
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        ${content}
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Add animation delay for multiple messages
+            messageDiv.style.animationDelay = `${messageCount * 0.1}s`;
+            messageCount++;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.add('show');
+            indicator.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.remove('show');
+        }
+
+        // Focus input on page load
+        window.addEventListener('load', () => {
+            document.getElementById('user-input').focus();
+        });
     </script>
 </body>
 </html>
